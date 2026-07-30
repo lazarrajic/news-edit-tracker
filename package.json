@@ -1,0 +1,18 @@
+{
+  "name": "nz-news-edit-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Polling nz news outlets, capturing each article over a period of time to see if any substantial changes were made and if they were announced.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "poll": "node --env-file-if-exists=.env src/poll.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.111.0",
+    "cheerio": "^1.2.0",
+    "rss-parser": "^3.13.0"
+  }
+}
