@@ -40,8 +40,12 @@ async function discover() {
     const feed = await parser.parseURL(feedUrl);
  
     const usable = feed.items.filter((item) => item.link && item.guid);
-    const articles = usable.filter((item) => !outlet.isLiveCoverage(item));
-    const skipped = usable.length - articles.length;
+    const skips = {};
+    const articles = usable.filter((item) => {
+      const reason = outlet.skipReason(item);
+      if (reason) skips[reason] = (skips[reason] ?? 0) + 1;
+      return !reason;
+    });
 
     const rows = articles.map((item) => ({
       outlet: outlet.slug,
@@ -51,8 +55,9 @@ async function discover() {
       next_check_at: now,
     }));
     const added = await addNewArticles(rows);
+    const skipped = Object.entries(skips).map(([r, n]) => `${n} ${r}`).join(', ') || 'none';
     console.log(
-      `${feedUrl}: ${feed.items.length} items, ${added.length} new, ${skipped} live skipped`
+      `${feedUrl}: ${feed.items.length} items, ${added.length} new, skipped: ${skipped}`
     );
     await sleep(outlet.crawlDelayMs);
   }

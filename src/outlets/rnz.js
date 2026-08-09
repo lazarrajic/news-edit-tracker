@@ -17,15 +17,19 @@ const MIN_BODY_CHARS = 200;
 
 // live updated articles change continuosly which would break the edit tracker. 
 const LIVE_TITLE = /^\s*live\s*:/i;
-export function isLiveCoverage(item) {
-    return LIVE_TITLE.test(item.title ?? '');
+const EXCLUDED_SECTIONS = /\/(programmes|news\/chinese_english)\//;
+
+export function skipReason(item) {
+    if (LIVE_TITLE.test(item.title ?? '')) return 'live';
+    if (EXCLUDED_SECTIONS.test(item.link ?? '')) return 'not in scope';
+    return null;
 }
 
 export const rnz = {
   slug: 'rnz',
   feeds: ['https://www.rnz.co.nz/rss/national.xml'],
   crawlDelayMs: 7000, 
-  isLiveCoverage,
+  skipReason,
   extract,
 };
 
