@@ -15,10 +15,17 @@ const stripLeadingMarks = (p) => p.replace(/^[^\p{L}]+/u, '');
 
 const MIN_BODY_CHARS = 200;
 
+// live updated articles change continuosly which would break the edit tracker. 
+const LIVE_TITLE = /^\s*live\s*:/i;
+export function isLiveCoverage(item) {
+    return LIVE_TITLE.test(item.title ?? '');
+}
+
 export const rnz = {
   slug: 'rnz',
   feeds: ['https://www.rnz.co.nz/rss/national.xml'],
   crawlDelayMs: 7000, 
+  isLiveCoverage,
   extract,
 };
 

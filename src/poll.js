@@ -31,6 +31,7 @@ if (stats.checked > 0 && stats.failed / stats.checked > 0.5) {
   process.exit(1);
 }
 
+
 async function discover() {
   const parser = new Parser({ headers: { 'user-agent': USER_AGENT } });
   const now = new Date().toISOString();
@@ -38,17 +39,21 @@ async function discover() {
   for (const feedUrl of outlet.feeds) {
     const feed = await parser.parseURL(feedUrl);
  
-    const rows = feed.items
-      .filter((item) => item.link && item.guid)
-      .map((item) => ({
-        outlet: outlet.slug,
-        guid: item.guid,
-        url: item.link,
-        published_at: item.isoDate ?? null,
-        next_check_at: now,
-      }));
+    const usable = feed.items.filter((item) => item.link && item.guid);
+    const articles = usable.filter((item) => !outlet.isLiveCoverage(item));
+    const skipped = usable.length - articles.length;
+
+    const rows = articles.map((item) => ({
+      outlet: outlet.slug,
+      guid: item.guid,
+      url: item.link,
+      published_at: item.isoDate ?? null,
+      next_check_at: now,
+    }));
     const added = await addNewArticles(rows);
-    console.log(`${feedUrl}: ${feed.items.length} items, ${added.length} new`);
+    console.log(
+      `${feedUrl}: ${feed.items.length} items, ${added.length} new, ${skipped} live skipped`
+    );
     await sleep(outlet.crawlDelayMs);
   }
 }
