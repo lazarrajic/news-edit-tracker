@@ -8,7 +8,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "poll": "node --env-file-if-exists=.env src/poll.js"
+    "poll": "node --env-file-if-exists=.env src/poll.js",
+    "diff": "node --env-file-if-exists=.env src/run-diffs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

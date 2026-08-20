@@ -59,3 +59,42 @@ export async function logFetch(row) {
 export async function updateArticle(id, patch) {
   unwrap(await db.from('articles').update(patch).eq('id', id));
 }
+
+// supabase caps reads at 1000 rows silently so keep asking until return <1000 = done. 
+async function all(table, columns, order) {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    let q = db.from(table).select(columns).range(from, from + 999);
+    for (const col of order) q = q.order(col);
+    const page = unwrap(await q);
+    rows.push(...page);
+    if (page.length <1000) return rows;
+  }
+}
+
+export async function allVersions() {
+  return all('article_versions', 'id, article_id, captured_at, headline, body_text', [
+    'article_id',
+    'captured_at',
+  ]);
+}
+
+export async function diffedPairs(engineVersion) {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const page = unwrap(
+      await db
+      .from('diffs')
+      .select('from_version_id, to_version_id')
+      .eq('engine_version', engineVersion)
+      .range(from, from + 999)
+    );
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return new Set(rows.map((r) => `${r.from_version_id}:${r.to_version_id}`));
+}
+    
+export async function upsertDiff(row) {
+  unwrap(await db.from('diffs').upsert(row, { onConflict: 'from_version_id,to_version_id' }));
+}
