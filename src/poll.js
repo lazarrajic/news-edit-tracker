@@ -130,6 +130,7 @@ async function check(article) {
       body_html: extracted.bodyHtml,
       correction_note: extracted.correctionNote,
       content_hash: hash,
+      is_live_blog: extracted.isLiveBlog,
     });
     stats.versions += 1;
     console.log(`${previous ? 'EDIT' : 'first'}  ${extracted.headline}`);

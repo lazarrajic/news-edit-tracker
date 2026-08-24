@@ -16,11 +16,11 @@ const stripLeadingMarks = (p) => p.replace(/^[^\p{L}]+/u, '');
 const MIN_BODY_CHARS = 200;
 
 // live updated articles change continuosly which would break the edit tracker. 
-const LIVE_TITLE = /^\s*live\s*:/i;
+const LIVE_BLOG_EMBED = '#liveblog-iframe';
+const LIVE_TITLE = /^\s*live\b[^:]{0,20}:/i;
 const EXCLUDED_SECTIONS = /\/(programmes|news\/chinese_english)\//;
 
 export function skipReason(item) {
-    if (LIVE_TITLE.test(item.title ?? '')) return 'live';
     if (EXCLUDED_SECTIONS.test(item.link ?? '')) return 'not in scope';
     return null;
 }
@@ -35,9 +35,7 @@ export const rnz = {
 
 export function extract(html) {
   const $ = cheerio.load(html);
-
   const h1 = $('h1').first();
- 
   const container = h1.closest('article');
   if (h1.length === 0 || container.length === 0) {
     throw new Error('no <h1> inside an <article> — page layout has changed');
@@ -70,10 +68,15 @@ export function extract(html) {
     bodyText,
     bodyHtml: container.html(),
     correctionNote: findCorrectionNote(paragraphs),
+    isLiveBlog: isLiveBlog(container, headline),
   };
+}
+export function isLiveBlog(container, headline) {
+  return container.find(LIVE_BLOG_EMBED).length > 0 || LIVE_TITLE.test(headline);
 }
 
 export function findCorrectionNote(paragraphs) {
   const candidates = [...paragraphs.slice(0, 3), paragraphs.at(-1)];
   return candidates.find((p) => p && NOTICE_PREFIX.test(stripLeadingMarks(p))) ?? null;
 }
+
