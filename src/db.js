@@ -76,6 +76,7 @@ export async function allVersions() {
   return all('article_versions', 'id, article_id, captured_at, headline, body_text', [
     'article_id',
     'captured_at',
+    'id',
   ]);
 }
 // pages in 200s not 1000s, html too large. 
