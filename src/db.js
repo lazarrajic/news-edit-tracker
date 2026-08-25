@@ -78,6 +78,34 @@ export async function allVersions() {
     'captured_at',
   ]);
 }
+// pages in 200s not 1000s, html too large. 
+export async function allVersionsHtml() {
+  const rows = [];
+  for (let from = 0; ; from += 200) {
+    const page = unwrap(
+      await db
+        .from('article_versions')
+        .select('id, article_id, headline, body_html, is_live_blog')
+        .order('id')
+        .range(from, from + 199)
+    );
+    rows.push(...page);
+    if (page.length < 200) break;
+  }
+  return rows;
+}
+
+// takes value so a rerun can unflag not just flag. 
+export async function setLiveBlogFlags(ids, value) {
+  for (let i = 0; i < ids.length; i += 100) {
+    unwrap(
+      await db
+      .from('article_versions')
+      .update({ is_live_blog: value})
+      .in('id', ids.slice(i, i + 100))
+    );
+  }
+}
 
 export async function diffedPairs(engineVersion) {
   const rows = [];
