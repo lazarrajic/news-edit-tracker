@@ -127,3 +127,59 @@ export async function diffedPairs(engineVersion) {
 export async function upsertDiff(row) {
   unwrap(await db.from('diffs').upsert(row, { onConflict: 'from_version_id,to_version_id' }));
 }
+
+// no correction note, i shouldnt see it while judging.
+export async function diffsForReview() {
+  return all(
+    'diffs',
+    'id, article_id, from_version_id, to_version_id, headline_changed, paragraphs_added, paragraphs_removed, paragraphs_modified, chars_added, chars_removed, payload',
+    ['id']
+  );
+}
+
+export async function liveBlogVersions() {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const page = unwrap(
+      await db
+      .from('article_versions')
+      .select('id')
+      .eq('is_live_blog', true)
+      .order('id')
+      .range(from, from + 999)
+    );
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return new Set(rows.map((r) => r.id));
+}
+
+export async function labelledPairs(pass) {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const page = unwrap(
+      await db
+      .from('labels')
+      .select('from_version_id, to_version_id')
+      .eq('pass', pass)
+      .range(from, from + 999)
+    );
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return new Set(rows.map((r) => `${r.from_version_id}:${r.to_version_id}`));
+}
+
+export async function insertLabel(row) {
+  unwrap(await db.from('labels').insert(row));
+}
+
+export async function versionTimes() {
+  const rows = await all('article_versions', 'id, captured_at', ['id']);
+  return new Map(rows.map((r) => [r.id, r.captured_at]));
+}
+
+export async function articleURLs() {
+  const rows = await all('articles', 'id, url', ['id']);
+  return new Map(rows.map((r) => [r.id, r.url]));
+}
