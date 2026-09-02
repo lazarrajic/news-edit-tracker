@@ -10,7 +10,8 @@
   "scripts": {
     "poll": "node --env-file-if-exists=.env src/poll.js",
     "diff": "node --env-file-if-exists=.env src/run-diffs.js",
-    "flag-live": "node --env-file-if-exists=.env src/flag-live-blogs.js"
+    "flag-live": "node --env-file-if-exists=.env src/flag-live-blogs.js",
+    "review": "node --env-file-if-exists=.env src/review.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
