@@ -12,7 +12,6 @@ import {
 const CATEGORIES = {
   t: 'trivial',
   s: 'stylistic',
-  h: 'headline',
   a: 'addition',
   d: 'deletion',
   f: 'factual',
@@ -135,7 +134,7 @@ for (const [i, diff] of queue.entries()) {
   render(diff, times, urls, `${i + 1}/${queue.length}`);
 
   console.log();
-  console.log('  [t]rivial [s]tylistic [h]eadline [a]ddition [d]eletion [f]actual   [space] skip  [q] quit');
+  console.log('  [t]rivial [s]tylistic [a]ddition [d]eletion [f]actual   [space] skip  [q] quit');
   const c = await keypress([...Object.keys(CATEGORIES), ' ', 'q']);
   if (c === 'q') break;
   if (c === ' ') continue;
