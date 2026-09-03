@@ -9,8 +9,12 @@ const NEVER_CONTENT = 'script, style, noscript';
 // exclude from body text but keep in store html. counting captions later without recollecting. 
 const NOT_BODY_TEXT = 'figure, figcaption, aside, nav, article';
 const NOTICE_PREFIX = /^(correction|clarification|editor'?s note|update)\b\s*[:—–-]/i;
+// discovered most notices are plain sentence not "Correction:". 
+const NOTICE_SELF_REF =
+  /\bthis (story|article)\b|\bthe headline (on|of) this\b|\bin this (story|article)\b/i;
+const NOTICE_CHANGE = /\b(updated?|corrected?|amended?|clarif(y|ied|ication))\b/i;
+const NOTICE_PRIOR_VERSION = /\ban? (earlier|previous) version of this (story|article)\b/i;
 
-// make up for variety of correction notices. 
 const stripLeadingMarks = (p) => p.replace(/^[^\p{L}]+/u, '');
 
 const MIN_BODY_CHARS = 200;
@@ -77,6 +81,13 @@ export function isLiveBlog(container, headline) {
 
 export function findCorrectionNote(paragraphs) {
   const candidates = [...paragraphs.slice(0, 3), paragraphs.at(-1)];
-  return candidates.find((p) => p && NOTICE_PREFIX.test(stripLeadingMarks(p))) ?? null;
+  return candidates.find((p) => p && isNotice(p)) ?? null;
+}
+function isNotice(p) {
+  return (
+    NOTICE_PREFIX.test(stripLeadingMarks(p)) ||
+    NOTICE_PRIOR_VERSION.test(p) ||
+    (NOTICE_SELF_REF.test(p) && NOTICE_CHANGE.test(p))
+  );
 }
 

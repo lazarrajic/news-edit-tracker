@@ -183,3 +183,23 @@ export async function articleURLs() {
   const rows = await all('articles', 'id, url', ['id']);
   return new Map(rows.map((r) => [r.id, r.url]));
 }
+
+export async function allVersionText() {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const page = unwrap(
+      await db
+      .from('article_versions')
+      .select('id, correction_note, body_text')
+      .order('id')
+      .range(from, from + 999)
+    );
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+
+export async function setCorrectionNote(id, note) {
+  unwrap(await db.from('article_versions').update({ correction_note: note }).eq('id', id));
+}
