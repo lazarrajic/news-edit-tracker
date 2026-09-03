@@ -19,6 +19,9 @@ const CATEGORIES = {
 
 const DISCLOSURE = { s: `silent`, a: `annotated`, u: `unclear`};
 
+//labelling set to stop at one month worth of data. colelctor keeps running but those are out of scope.
+const CUTOFF = '2026-08-31T23:59:59Z';
+
 // bands so i can label by kind of edit not id order.
 const BANDS = { 
     headline: (d) => d.headline_changed && !d.paragraphs_modified && !d.paragraphs_added && !d.paragraphs_removed, 
@@ -123,7 +126,7 @@ const [diffs, done, live, times, urls] = await Promise.all([
 const isLive = (d) => live.has(d.from_version_id) || live.has(d.to_version_id);
 const excluded = diffs.filter(isLive).length;
 
-const queue = diffs.filter((d) => !isLive(d)).filter(band).filter((d) => !done.has(`${d.from_version_id}:${d.to_version_id}`)).slice(0, limit);
+const queue = diffs.filter((d) => !isLive(d)).filter((d) => times.get(d.to_version_id) <= CUTOFF).filter(band).filter((d) => !done.has(`${d.from_version_id}:${d.to_version_id}`)).slice(0, limit);
 console.log(`${excluded} live-blog diffs excluded`);
 console.log(`${queue.length} unlabelled in band '${bandName}' (pass ${PASS})`);
 if (!queue.length) process.exit(0);
