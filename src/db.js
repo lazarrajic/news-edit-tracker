@@ -170,6 +170,24 @@ export async function labelledPairs(pass) {
   return new Set(rows.map((r) => `${r.from_version_id}:${r.to_version_id}`));
 }
 
+//disclousure left out out intentionally, classifier predicts only category, cant lean on knowing if a notice was there. 
+export async function categoryLabels(pass) {
+  const rows = []
+  for (let from = 0; ; from += 1000) {
+    const page = unwrap(
+      await db
+      .from('labels')
+      .select('id, from_version_id, to_version_id, edit_category')
+      .eq('pass', pass)
+      .order('id')
+      .range(from, from + 999)
+    );
+    rows.push(...page);
+    if (page.length < 1000) break;
+  }
+  return rows;
+}
+
 export async function insertLabel(row) {
   unwrap(await db.from('labels').insert(row));
 }

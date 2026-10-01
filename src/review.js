@@ -126,7 +126,8 @@ const [diffs, done, live, times, urls] = await Promise.all([
 const isLive = (d) => live.has(d.from_version_id) || live.has(d.to_version_id);
 const excluded = diffs.filter(isLive).length;
 
-const queue = diffs.filter((d) => !isLive(d)).filter((d) => times.get(d.to_version_id) <= CUTOFF).filter(band).filter((d) => !done.has(`${d.from_version_id}:${d.to_version_id}`)).slice(0, limit);
+//the early edits were seen during relabelling, so pass 2 takes the latest ones
+const queue = diffs.filter((d) => !isLive(d)).filter((d) => times.get(d.to_version_id) <= CUTOFF).filter(band).slice(-limit).filter((d) => !done.has(`${d.from_version_id}:${d.to_version_id}`));
 console.log(`${excluded} live-blog diffs excluded`);
 console.log(`${queue.length} unlabelled in band '${bandName}' (pass ${PASS})`);
 if (!queue.length) process.exit(0);
