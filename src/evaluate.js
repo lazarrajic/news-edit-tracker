@@ -1,6 +1,5 @@
-const classify = () => 'addition';
-
 import { categoryLabels, diffsForReview, versionTimes, articleURLs } from './db.js';
+import { features, classify } from './classify.js';
 
 const CATEGORIES = ['trivial', 'stylistic', 'addition', 'deletion', 'factual'];
 
@@ -39,7 +38,7 @@ for (const l of labels) {
 const trainCounts = count(rows.filter((r) => r.train).map((r) => r.truth));
 const majority = CATEGORIES.reduce((a, b) => (trainCounts[b] > trainCounts[a] ? b : a));
 
-const scored = rows.filter((r) => r.train === (which === 'train')).map((r) => ({...r, guess: classify(r.diff.payload)}));
+const scored = rows.filter((r) => r.train === (which === 'train')).map((r) => ({...r, guess: classify(features(r.diff.payload))}));
 
 console.log(`${labels.length} labels, ${duplicates.length} duplicates dropped (diffs ${duplicates.join(', ')}), ${rows.length} edits`);
 console.log(`scoring ${which}: ${scored.length} edits\n`);
