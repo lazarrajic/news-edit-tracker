@@ -62,6 +62,19 @@ rate('factual', (e) => e.category === 'factual');
 rate('factual + deletion', (e) => e.category === 'factual' || e.category === 'deletion');
 rate('every edit', () => true);
 
+// notice only counts if new in this version, else old correction makes every later edit on that article look declared
+const detected = (d) => {
+    const note = version.get(d.to_version_id).correction_note;
+    return Boolean(note) && note !== version.get(d.from_version_id).correction_note;
+};
+
+section('notice detector vs hand label');
+const both = edits.filter((e) => e.disclosure === 'annotated' && detected(e.diff));
+const handOnly = edits.filter((e) => e.disclosure === 'annotated' && !detected(e.diff));
+const detectorOnly = edits.filter((e) => e.disclosure !== 'annotated' && detected(e.diff));
+console.log(`   both say annotated          ${both.length}`);
+console.log(`   only my label says so       ${handOnly.length}${ids(handOnly)}`);
+console.log(`   only the detector says so   ${detectorOnly.length}${ids(detectorOnly)}`);
 
 function section(title) {
     console.log(`\n${title}`);
@@ -87,4 +100,8 @@ function wilson(k, n, z = 1.96) {
 
 function pct(v) {
     return `${Math.round(v * 100)}%`;
+}
+
+function ids(items){
+    return items.length ? ` (diffs ${items.map((e) => e.diff.id).join(', ')})` : '';
 }
