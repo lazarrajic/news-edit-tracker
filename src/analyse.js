@@ -24,7 +24,7 @@ const pass1 = labels.filter((l) => l.pass === 1);
 const labelled = new Set(pass1.map(pair));
 const unlabelled = eligible.filter((d) => !labelled.has(pair(d)));
 
-// 2 article rows can hold the same edit 
+// rss can give the same story a new guid so one edit can sit under 2 article rows 
 const seen = new Map();
 const duplicates = []; 
 const edits = [];
@@ -48,6 +48,18 @@ console.log(`   duplicate edits dropped ${duplicates.length}    (diffs ${duplica
 console.log(`   edits analysed  ${edits.length}`);
 if (unlabelled.length) console.log(`! ${unlabelled.length} eligible diffs never labelled: ${unlabelled.map((d) => d.id).join(', ')}`);
 
+section('category x disclosure');
+console.log('               ' + DISCLOSURES.map((d) => d.padStart(10)).join('') + '     total');
+for (const c of CATEGORIES) {
+    const cells = DISCLOSURES.map((d) => String(edits.filter((e) => e.category === c && e.disclosure === d).length).padStart(10));
+    console.log(`   ${c.padEnd(10)}  ${cells.join('')}${String(edits.filter((e) => e.category === c).length).padStart(10)}`);
+}
+const totals = DISCLOSURES.map((d) => String(edits.filter((e) => e.disclosure === d).length).padStart(10));
+console.log(`   ${'TOTAL'.padEnd(10)}  ${totals.join('')}${String(edits.length).padStart(10)}`);
+
+
 function section(title) {
     console.log(`\n${title}`);
 }
+
+
