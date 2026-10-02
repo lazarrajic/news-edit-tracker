@@ -57,9 +57,34 @@ for (const c of CATEGORIES) {
 const totals = DISCLOSURES.map((d) => String(edits.filter((e) => e.disclosure === d).length).padStart(10));
 console.log(`   ${'TOTAL'.padEnd(10)}  ${totals.join('')}${String(edits.length).padStart(10)}`);
 
+section('silent rate (95% wilson interval)');
+rate('factual', (e) => e.category === 'factual');
+rate('factual + deletion', (e) => e.category === 'factual' || e.category === 'deletion');
+rate('every edit', () => true);
+
 
 function section(title) {
     console.log(`\n${title}`);
 }
 
 
+function rate(name, include) {
+    const group = edits.filter(include);
+    const silent = group.filter((e) => e.disclosure === 'silent').length;
+    const n = group.filter((e) => e.disclosure !== 'unclear').length;
+    const unclear = group.length - n;
+    const [lo, hi] = wilson(silent, n);
+    console.log(`   ${name.padEnd(20)} ${silent}/${n} silent = ${pct(silent / n)}   CI ${pct(lo)}-${pct(hi)}` + (unclear ? `    (${unclear} unclear left out)` : ''));
+}
+
+// with only around 30 cases the simple formula gives a range thats too narrow
+function wilson(k, n, z = 1.96) {
+    const p = k / n;
+    const centre = (p + (z * z) / (2 * n)) / (1 + (z * z) / n);
+    const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / (1 + (z * z) / n);
+    return [centre - half, centre + half];
+}
+
+function pct(v) {
+    return `${Math.round(v * 100)}%`;
+}
