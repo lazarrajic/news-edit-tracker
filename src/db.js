@@ -221,3 +221,15 @@ export async function allVersionText() {
 export async function setCorrectionNote(id, note) {
   unwrap(await db.from('article_versions').update({ correction_note: note }).eq('id', id));
 }
+
+export async function allLabels() {
+  return all('labels', 'id, from_version_id, to_version_id, edit_category, disclosure, note, pass', ['id']);
+}
+
+export async function versionFacts() {
+  return all('article_versions', 'id, article_id, captured_at, correction_note, is_live_blog', ['id']);
+}
+
+export async function articleFacts() {
+  return all('articles', 'id, url, published_at', ['id']);
+}

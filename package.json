@@ -13,7 +13,8 @@
     "flag-live": "node --env-file-if-exists=.env src/flag-live-blogs.js",
     "review": "node --env-file-if-exists=.env src/review.js",
     "backfill-notices": "node --env-file-if-exists=.env src/backfill-notices.js",
-    "evaluate": "node --env-file-if-exists=.env src/evaluate.js"
+    "evaluate": "node --env-file-if-exists=.env src/evaluate.js",
+    "analyse": "node --env-file-if-exists=.env src/analyse.js"
   },
   
   "dependencies": {
