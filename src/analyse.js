@@ -76,6 +76,13 @@ console.log(`   both say annotated          ${both.length}`);
 console.log(`   only my label says so       ${handOnly.length}${ids(handOnly)}`);
 console.log(`   only the detector says so   ${detectorOnly.length}${ids(detectorOnly)}`);
 
+section('pass 2 self-agreement (edit category)');
+const pass1ByPair = new Map(pass1.map((l) => [pair(l), l]));
+// a pass-2 label i couldnt judge blind is reported, not counted
+const compared = labels.filter((l) => l.pass === 2 && pass1ByPair.has(pair(l))).filter((l) => !/not blind/i.test(l.note ?? '')).map((l) => [pass1ByPair.get(pair(l)).edit_category, l.edit_category]);
+const agree = compared.filter(([a,b]) => a === b).length;
+console.log(`   ${agree} of ${compared.length} agree, kappa ${kappa(compared).toFixed(2)}`);
+console.log(`   pass-2 labels not compared  ${labels.filter((l) => l.pass === 2).length - compared.length}`);
 
 const windowVersions = versions.filter((v) => v.captured_at <= CUTOFF);
 // first time i saw each article, needed for both the article count and the capture delay
@@ -146,4 +153,11 @@ function count(xs) {
     const out = {};
     for (const x of xs) out[x] = (out[x] ?? 0) + 1;
     return out;
+}
+// takes away the agreement id get by luck  because most edits are additions
+function kappa(pairs) {
+    const n = pairs.length;
+    const observed = pairs.filter(([a, b]) => a === b).length / n;
+    const expected = CATEGORIES.reduce((sum, c) => sum + (pairs.filter(([a]) => a === c).length / n) * (pairs.filter(([, b]) => b === c).length / n), 0);
+    return (observed - expected) / (1 - expected);
 }
