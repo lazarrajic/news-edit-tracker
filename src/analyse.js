@@ -76,6 +76,38 @@ console.log(`   both say annotated          ${both.length}`);
 console.log(`   only my label says so       ${handOnly.length}${ids(handOnly)}`);
 console.log(`   only the detector says so   ${detectorOnly.length}${ids(detectorOnly)}`);
 
+
+const windowVersions = versions.filter((v) => v.captured_at <= CUTOFF);
+// first time i saw each article, needed for both the article count and the capture delay
+const firstCapture = new Map();
+for (const v of windowVersions) {
+    if (!firstCapture.has(v.article_id) || v.captured_at < firstCapture.get(v.article_id)) {
+        firstCapture.set(v.article_id, v.captured_at);
+    }
+}
+section('corpus in window');
+console.log(`   versions            ${windowVersions.length}`);
+console.log(`   articles            ${firstCapture.size}`);
+const perArticle = count(edits.map((e) => e.diff.article_id));
+const edited = Object.keys(perArticle).length;
+console.log(`   articles ever edited            ${edited}   (${pct(edited / firstCapture.size)})`);
+const timesEdited = count(Object.values(perArticle));
+for (const n of Object.keys(timesEdited).sort((a,b) => a - b)) {
+    console.log(`   edited ${n}x            ${timesEdited[n]}`);
+}
+const urls = count([...firstCapture.keys()].map((id) => article.get(id).url));
+// same story under two article rows because rss reissued the guid
+console.log(`   urls tracked under two rows ${Object.values(urls).filter((n) => n > 1).length}`);
+
+// edits made before my first capture cant be seen so the silent rate is a minimum
+section('publication -> first capture (hours)');
+const gaps = [...firstCapture].filter(([id]) => article.get(id).published_at).map(([id, at]) => (new Date(at) - new Date(article.get(id).published_at)) / 3_600_000).sort((a,b) => a - b);
+console.log(`   articles with a publish time ${gaps.length} of ${firstCapture.size}`);
+console.log(`   median ${quantile(gaps, 0.5).toFixed(1)}    75th ${quantile(gaps, 0.75).toFixed(1)} 90th ${quantile(gaps, 0.9).toFixed(1)}  max ${gaps.at(-1).toFixed(1)}`);
+console.log(`   within 1h ${pct(gaps.filter((g) => g <= 1).length / gaps.length)}   within 3h ${pct(gaps.filter((g) => g <= 3).length / gaps.length)}`);
+
+
+
 function section(title) {
     console.log(`\n${title}`);
 }
@@ -104,4 +136,14 @@ function pct(v) {
 
 function ids(items){
     return items.length ? ` (diffs ${items.map((e) => e.diff.id).join(', ')})` : '';
+}
+
+function quantile(sorted, q) {
+    return sorted[Math.floor(q * (sorted.length - 1))];
+}
+
+function count(xs) {
+    const out = {};
+    for (const x of xs) out[x] = (out[x] ?? 0) + 1;
+    return out;
 }
